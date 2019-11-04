@@ -1,0 +1,32 @@
+{
+	"name": "krzysztofrewak/laravel-observers-observer",
+	"description": "Laravel command listing all model events in application",
+	"type": "library",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Krzysztof Rewak",
+			"email": "krzysztof.rewak@gmail.com"
+		}
+	],
+	"require": {
+		"php": "^7.3",
+		"ext-json": "*",
+		"illuminate/support": "^6.4",
+		"illuminate/console": "^6.4",
+		"illuminate/filesystem": "^6.4",
+		"illuminate/events": "^6.4"
+	},
+	"autoload": {
+		"psr-4": {
+			"KrzysztofRewak\\ObserversObserver\\": "src/"
+		}
+	},
+	"extra": {
+		"laravel": {
+			"providers": [
+				"KrzysztofRewak\\ObserversObserver\\ObserversObserverServiceProvider"
+			]
+		}
+	}
+}
