@@ -6,6 +6,7 @@ namespace KrzysztofRewak\ObserversObserver\Services;
 
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionException;
 
@@ -15,6 +16,9 @@ use ReflectionException;
  */
 class ListenersRetriever
 {
+    /** @var string */
+    protected const ELOQUENT_EVENT_PREFIX = "eloquent.";
+
     /** @var Dispatcher */
     protected $dispatcher;
 
@@ -33,13 +37,14 @@ class ListenersRetriever
      */
     public function retrieve(): Collection
     {
-
         $listeners = collect();
         foreach ($this->getListeners() as $key => $observer) {
             $listeners->add($key);
         }
 
-        return $listeners;
+        return $listeners->filter(function (string $listener): bool {
+            return Str::startsWith($listener, static::ELOQUENT_EVENT_PREFIX);
+        });
     }
 
     /**

@@ -7,7 +7,7 @@ The package is under development right now. At this moment only working features
 ## Installation
 Please use Composer:
 ```bash
-composer require krzysztofrewak/laravel-observers-observer
+composer require krzysztofrewak/laravel-observers-observer --dev
 ```
 
 ## Usage
