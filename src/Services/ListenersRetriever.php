@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace KrzysztofRewak\ObserversObserver\Services;
 
-use Illuminate\Events\Dispatcher;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use ReflectionClass;
@@ -38,12 +38,16 @@ class ListenersRetriever
     public function retrieve(): Collection
     {
         $listeners = collect();
-        foreach ($this->getListeners() as $key => $observer) {
-            $listeners->add($key);
+        foreach ($this->getListeners() as $key => $events) {
+            foreach ($events as $event) {
+                $listeners->add($key);
+            }
         }
 
         return $listeners->filter(function (string $listener): bool {
             return Str::startsWith($listener, static::ELOQUENT_EVENT_PREFIX);
+        })->map(function(string $listener): string {
+            return str_replace(static::ELOQUENT_EVENT_PREFIX, "", $listener);
         });
     }
 
@@ -53,8 +57,7 @@ class ListenersRetriever
      */
     protected function getListeners(): array
     {
-        $reflectedDispatcher = new ReflectionClass(Dispatcher::class);
-
+        $reflectedDispatcher = new ReflectionClass(get_class($this->dispatcher));
         $reflectedListeners = $reflectedDispatcher->getProperty("listeners");
         $reflectedListeners->setAccessible(true);
 

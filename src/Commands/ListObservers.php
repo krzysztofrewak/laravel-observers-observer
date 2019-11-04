@@ -6,6 +6,7 @@ namespace KrzysztofRewak\ObserversObserver\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use KrzysztofRewak\ObserversObserver\Services\EventsCombiner;
 use KrzysztofRewak\ObserversObserver\Services\ListenersRetriever;
 use KrzysztofRewak\ObserversObserver\Services\ModelsRetriever;
 use ReflectionException;
@@ -26,19 +27,23 @@ class ListObservers extends Command
     protected $modelsRetriever;
     /**  @var ListenersRetriever */
     protected $listenersRetriever;
+    /**  @var EventsCombiner */
+    protected $combiner;
 
     /**
      * ListObservers constructor.
      * @param Filesystem $filesystem
      * @param ModelsRetriever $modelsRetriever
      * @param ListenersRetriever $listenersRetriever
+     * @param EventsCombiner $combiner
      */
-    public function __construct(Filesystem $filesystem, ModelsRetriever $modelsRetriever, ListenersRetriever $listenersRetriever)
+    public function __construct(Filesystem $filesystem, ModelsRetriever $modelsRetriever, ListenersRetriever $listenersRetriever, EventsCombiner $combiner)
     {
         parent::__construct();
         $this->filesystem = $filesystem;
         $this->modelsRetriever = $modelsRetriever;
         $this->listenersRetriever = $listenersRetriever;
+        $this->combiner = $combiner;
     }
 
     /**
@@ -50,22 +55,16 @@ class ListObservers extends Command
         $this->info("Counting and analyzing application and framework files...");
 
         $files = $this->filesystem->allFiles(".");
-        $models = $this->modelsRetriever->retrieve($files);
-
         $count = count($files);
-        $this->info("{$models->count()} model files found (of $count files).");
+        $this->info("$count files found.");
 
-        $this->table(["Namespaced class", "Events"], $models->map(function (string $model): array {
-            return [
-                $model,
-            ];
-        })->toArray());
+        $models = $this->modelsRetriever->retrieve($files);
+        $this->info("{$models->count()} model files found.");
 
         $listeners = $this->listenersRetriever->retrieve();
-        $this->table(["Events"], $listeners->map(function (string $model): array {
-            return [
-                $model,
-            ];
-        })->toArray());
+        $this->info("{$listeners->count()} events found.");
+
+        $results = $this->combiner->combine($listeners, $models);
+        $this->table(["Model", "Event", "Triggered at"], $results);
     }
 }
