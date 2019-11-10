@@ -9,6 +9,7 @@ use Illuminate\Filesystem\Filesystem;
 use KrzysztofRewak\ObserversObserver\Services\EventsCombiner;
 use KrzysztofRewak\ObserversObserver\Services\ListenersRetriever;
 use KrzysztofRewak\ObserversObserver\Services\ModelsRetriever;
+use KrzysztofRewak\ObserversObserver\Services\RegisteredEvents;
 use ReflectionException;
 
 /**
@@ -20,7 +21,7 @@ class ListObservers extends Command
     /** @var string */
     protected $name = "observers:list";
     /** @var string */
-    protected $description = "Lists observers";
+    protected $description = "Lists all model-related events";
     /** @var Filesystem */
     protected $filesystem;
     /** @var ModelsRetriever */
@@ -65,6 +66,6 @@ class ListObservers extends Command
         $this->info("{$listeners->count()} events found.");
 
         $results = $this->combiner->combine($listeners, $models);
-        $this->table(["Model", "Event", "Triggered at"], $results);
+        $this->table(["Model", "Event", "Triggered on", "Notes"], $results);
     }
 }

@@ -15,7 +15,7 @@ use Throwable;
 class ModelsRetriever
 {
     /** @var string */
-    protected const MODEL_CLASS = "Illuminate\Database\Eloquent\Model";
+    public const MODEL_CLASS = "Illuminate\Database\Eloquent\Model";
 
     /**
      * @param array $files
@@ -29,8 +29,8 @@ class ModelsRetriever
             $file = (string)$file;
             if ($this->checkIfFileIsPhp($file) && !$this->checkIfFileIsOnBlacklist($file)) {
                 try {
-                    $class = $this->getClassFromFile($file);
-                    if ($class && is_subclass_of($class, static::MODEL_CLASS)) {
+                    $class = ClassNameBuilder::getClassFromFile($file);
+                    if ($class && $this->checkIfClassIsModel($class)) {
                         $models->add($class);
                         $class::observe(null);
                     }
@@ -58,46 +58,15 @@ class ModelsRetriever
      */
     protected function checkIfFileIsOnBlacklist(string $file): bool
     {
-        return Str::contains($file, "vendor\\symfony\\");
+        return Str::contains($file, config("observers.blacklist"));
     }
 
     /**
-     * @param $path_to_file
-     * @return mixed|string
+     * @param string $class
+     * @return bool
      */
-    protected function getClassFromFile($path_to_file)
+    protected function checkIfClassIsModel(string $class)
     {
-        $contents = file_get_contents($path_to_file);
-        $namespace = $class = "";
-        $getting_namespace = $getting_class = false;
-
-        foreach (token_get_all($contents) as $token) {
-            if (is_array($token) && $token[0] === T_NAMESPACE) {
-                $getting_namespace = true;
-            }
-
-            if (is_array($token) && $token[0] === T_CLASS) {
-                $getting_class = true;
-            }
-
-            if ($getting_namespace === true) {
-                if (is_array($token) && in_array($token[0], [T_STRING, T_NS_SEPARATOR])) {
-                    $namespace .= $token[1];
-                } else {
-                    if ($token === ";") {
-                        $getting_namespace = false;
-                    }
-                }
-            }
-
-            if ($getting_class === true) {
-                if (is_array($token) && $token[0] == T_STRING) {
-                    $class = $token[1];
-                    break;
-                }
-            }
-        }
-
-        return $namespace ? $namespace . '\\' . $class : $class;
+        return is_subclass_of($class, static::MODEL_CLASS);
     }
 }
