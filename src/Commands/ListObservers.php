@@ -11,6 +11,7 @@ use KrzysztofRewak\ObserversObserver\Services\ListenersRetriever;
 use KrzysztofRewak\ObserversObserver\Services\ModelsRetriever;
 use KrzysztofRewak\ObserversObserver\Services\RegisteredEvents;
 use ReflectionException;
+use Throwable;
 
 /**
  * Class ListObservers
@@ -55,11 +56,17 @@ class ListObservers extends Command
     {
         $this->info("Counting and analyzing application and framework files...");
 
-        $files = $this->filesystem->allFiles(".");
-        $count = count($files);
-        $this->info("$count files found.");
+        try {
+            $classes = include "./vendor/composer/autoload_classmap.php";
+        } catch (Throwable $error) {
+            $this->warn("Please run composer dump-autoload to create your classmap file.");
+            die();
+        }
 
-        $models = $this->modelsRetriever->retrieve($files);
+        $count = count($classes);
+        $this->info("$count classes found.");
+
+        $models = $this->modelsRetriever->retrieve($classes);
         $this->info("{$models->count()} model files found.");
 
         $listeners = $this->listenersRetriever->retrieve();

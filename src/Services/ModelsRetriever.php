@@ -25,18 +25,15 @@ class ModelsRetriever
     {
         $models = collect();
 
-        foreach ($files as $file) {
-            $file = (string)$file;
-            if ($this->checkIfFileIsPhp($file) && !$this->checkIfFileIsOnBlacklist($file)) {
-                try {
-                    $class = ClassNameBuilder::getClassFromFile($file);
-                    if ($class && $this->checkIfClassIsModel($class)) {
-                        $models->add($class);
-                        $class::observe(null);
-                    }
-                } catch (Throwable $exception) {
-                    continue;
+        foreach ($files as $class => $file) {
+            try {
+
+                if (!$this->checkIfFileIsOnBlacklist($file) && $this->checkIfClassIsModel($class)) {
+                    $models->add($class);
+                    $class::observe(null);
                 }
+            } catch (Throwable $exception) {
+                continue;
             }
         }
 
